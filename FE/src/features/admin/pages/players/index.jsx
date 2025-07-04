@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { showToast } from "../../../../utils/toast";
 import {
     addPlayer,
@@ -18,6 +18,9 @@ const Player = () => {
         teamId: "",
         isCaptain: false,
     });
+
+    const [playerToDelete, setPlayerToDelete] = useState(null); // lưu player sắp bị xoá
+    const modalRef = useRef(null);
 
     const fetchPlayers = async () => {
         try {
@@ -69,15 +72,26 @@ const Player = () => {
         }
     };
 
-    const handleDelete = async (id) => {
-        if (!window.confirm("Xác nhận xoá cầu thủ?")) return;
+    const confirmDelete = (player) => {
+        setPlayerToDelete(player);
+        modalRef.current.classList.add("is-active");
+    };
+
+    const handleDeleteConfirmed = async () => {
         try {
-            await deletePlayer(id);
+            await deletePlayer(playerToDelete._id);
             showToast("🗑️ Đã xoá!", "is-info");
             fetchPlayers();
         } catch {
             showToast("Không thể xoá cầu thủ", "is-danger");
+        } finally {
+            closeModal();
         }
+    };
+
+    const closeModal = () => {
+        modalRef.current.classList.remove("is-active");
+        setPlayerToDelete(null);
     };
 
     const handleEdit = (player) => {
@@ -85,7 +99,7 @@ const Player = () => {
         setNewPlayer({
             playerName: player.playerName,
             image: player.image,
-            teamId: player.team?._id || player.team, // handle populated or plain ObjectId
+            teamId: player.team?._id || player.team,
             isCaptain: player.isCaptain,
         });
     };
@@ -104,38 +118,30 @@ const Player = () => {
         <div className="container">
             <h2 className="title is-4">⚽ Quản lý Cầu thủ</h2>
 
-            {/* Form Thêm/Sửa cầu thủ */}
+            {/* Form Thêm/Sửa */}
             <div className="box">
                 <div className="field">
                     <label className="label">Tên cầu thủ</label>
                     <input
                         className="input"
                         value={newPlayer.playerName}
-                        onChange={(e) =>
-                            setNewPlayer({ ...newPlayer, playerName: e.target.value })
-                        }
+                        onChange={(e) => setNewPlayer({ ...newPlayer, playerName: e.target.value })}
                     />
                 </div>
-
                 <div className="field">
                     <label className="label">Ảnh (URL)</label>
                     <input
                         className="input"
                         value={newPlayer.image}
-                        onChange={(e) =>
-                            setNewPlayer({ ...newPlayer, image: e.target.value })
-                        }
+                        onChange={(e) => setNewPlayer({ ...newPlayer, image: e.target.value })}
                     />
                 </div>
-
                 <div className="field">
                     <label className="label">Đội bóng</label>
                     <div className="select is-fullwidth">
                         <select
                             value={newPlayer.teamId}
-                            onChange={(e) =>
-                                setNewPlayer({ ...newPlayer, teamId: e.target.value })
-                            }
+                            onChange={(e) => setNewPlayer({ ...newPlayer, teamId: e.target.value })}
                         >
                             <option value="">-- Chọn đội --</option>
                             {teams.map((team) => (
@@ -146,20 +152,16 @@ const Player = () => {
                         </select>
                     </div>
                 </div>
-
                 <div className="field">
                     <label className="checkbox">
                         <input
                             type="checkbox"
                             checked={newPlayer.isCaptain}
-                            onChange={(e) =>
-                                setNewPlayer({ ...newPlayer, isCaptain: e.target.checked })
-                            }
+                            onChange={(e) => setNewPlayer({ ...newPlayer, isCaptain: e.target.checked })}
                         />{" "}
                         Là đội trưởng?
                     </label>
                 </div>
-
                 <div className="buttons mt-2">
                     <button className="button is-link" onClick={handleSave}>
                         {editingId ? "💾 Cập nhật" : "➕ Thêm cầu thủ"}
@@ -172,16 +174,16 @@ const Player = () => {
                 </div>
             </div>
 
-            {/* Danh sách cầu thủ */}
+            {/* Danh sách */}
             <table className="table is-fullwidth is-striped">
                 <thead>
                     <tr>
                         <th>STT</th>
-                        <th>Hình</th>
+                        <th>Hình ảnh</th>
                         <th>Tên</th>
                         <th>Đội</th>
-                        <th>Đội trưởng</th>
-                        <th>Hành động</th>
+                        <th className="has-text-right" style={{ paddingLeft: "3rem" }}>Đội trưởng</th>
+                        <th className="has-text-right" style={{ paddingRight: "2.4rem" }}>Hành động</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -193,19 +195,13 @@ const Player = () => {
                             </td>
                             <td>{p.playerName}</td>
                             <td>{p.team?.teamName}</td>
-                            <td>{p.isCaptain ? "✅" : "❌"}</td>
-                            <td>
-                                <div className="buttons">
-                                    <button
-                                        className="button is-small is-info"
-                                        onClick={() => handleEdit(p)}
-                                    >
+                            <td className="has-text-right">{p.isCaptain ? "✅" : "❌"}</td>
+                            <td className="has-text-right">
+                                <div className="buttons is-right">
+                                    <button className="button is-small is-info" onClick={() => handleEdit(p)}>
                                         ✏️ Sửa
                                     </button>
-                                    <button
-                                        className="button is-small is-danger"
-                                        onClick={() => handleDelete(p._id)}
-                                    >
+                                    <button className="button is-small is-danger" onClick={() => confirmDelete(p)}>
                                         🗑️ Xoá
                                     </button>
                                 </div>
@@ -214,6 +210,29 @@ const Player = () => {
                     ))}
                 </tbody>
             </table>
+
+            {/* Modal xác nhận xoá */}
+            <div className="modal" ref={modalRef}>
+                <div className="modal-background" onClick={closeModal}></div>
+                <div className="modal-card">
+                    <header className="modal-card-head">
+                        <p className="modal-card-title">Xác nhận xoá</p>
+                        <button className="delete" aria-label="close" onClick={closeModal}></button>
+                    </header>
+                    <section className="modal-card-body">
+                        Bạn có chắc muốn xoá cầu thủ{" "}
+                        <strong>{playerToDelete?.playerName}</strong> không?
+                    </section>
+                    <footer className="modal-card-foot">
+                        <button className="button is-danger mr-3" onClick={handleDeleteConfirmed}>
+                            Xác nhận
+                        </button>
+                        <button className="button" onClick={closeModal}>
+                            Huỷ
+                        </button>
+                    </footer>
+                </div>
+            </div>
         </div>
     );
 };

@@ -1,4 +1,4 @@
-import { Navigate, Route, BrowserRouter as Router, Routes } from "react-router-dom";
+import { Navigate, Route, BrowserRouter as Router, Routes, useLocation } from "react-router-dom";
 import { Navbar } from "../components";
 import {
     Accounts,
@@ -14,10 +14,18 @@ import {
 } from "../features";
 import { AdminRoute, MemberRoute } from "./ProtectedRouter";
 
-export default function AppRouter() {
+function LayoutWrapper() {
+    const location = useLocation();
+
+    // Kiểm tra nếu là route không cần navbar
+    const hideNavbar =
+        location.pathname.startsWith("/login") ||
+        location.pathname.startsWith("/register") ||
+        location.pathname.startsWith("/admin");
+
     return (
-        <Router>
-            <Navbar />
+        <>
+            {!hideNavbar && <Navbar />}
             <Routes>
                 <Route path="/" element={<Navigate to="/login" replace />} />
                 <Route path="/login" element={<Login />} />
@@ -71,6 +79,14 @@ export default function AppRouter() {
                     <Route path="players" element={<Player />} />
                 </Route>
             </Routes>
+        </>
+    );
+}
+
+export default function AppRouter() {
+    return (
+        <Router>
+            <LayoutWrapper />
         </Router>
     );
 }

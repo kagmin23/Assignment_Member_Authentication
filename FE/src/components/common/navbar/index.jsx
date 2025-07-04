@@ -2,8 +2,9 @@ import { useRef } from "react";
 import { useNavigate } from "react-router-dom";
 
 const Navbar = () => {
-    const modalRef = useRef(null); // ✅ useRef object, not current
+    const modalRef = useRef(null);
     const navigate = useNavigate();
+
     const handleLogoutConfirm = () => {
         localStorage.removeItem("token");
         localStorage.removeItem("id");
@@ -18,8 +19,8 @@ const Navbar = () => {
     };
 
     const handleHome = () => {
-        navigate("/player-list")
-    }
+        navigate("/player-list");
+    };
 
     return (
         <>
@@ -32,12 +33,20 @@ const Navbar = () => {
                     <div className="collapse navbar-collapse">
                         <ul className="navbar-nav ms-auto">
                             <li className="nav-item">
-                                <span className="nav-link" onClick={() => window.location.href = "/profile"} style={{ cursor: "pointer" }}>
+                                <span
+                                    className="nav-link"
+                                    onClick={() => navigate("/profile")}
+                                    style={{ cursor: "pointer" }}
+                                >
                                     Hồ sơ
                                 </span>
                             </li>
                             <li className="nav-item">
-                                <span className="nav-link text-danger ms-3" onClick={showModal} style={{ cursor: "pointer" }}>
+                                <span
+                                    className="nav-link text-danger ms-3"
+                                    onClick={showModal}
+                                    style={{ cursor: "pointer" }}
+                                >
                                     Đăng xuất
                                 </span>
                             </li>
@@ -46,14 +55,14 @@ const Navbar = () => {
                 </div>
             </nav>
 
-            {/* Bootstrap Modal */}
             <div
                 className="modal fade"
+                ref={modalRef}
                 id="logoutModal"
                 tabIndex="-1"
                 aria-labelledby="logoutModalLabel"
                 aria-hidden="true"
-                ref={modalRef}
+                style={{ zIndex: 9999 }}
             >
                 <div className="modal-dialog modal-dialog-centered">
                     <div className="modal-content">
@@ -61,14 +70,29 @@ const Navbar = () => {
                             <h5 className="modal-title" id="logoutModalLabel">
                                 Xác nhận đăng xuất
                             </h5>
-                            <button type="button" className="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            <button
+                                type="button"
+                                className="btn-close"
+                                data-bs-dismiss="modal"
+                                aria-label="Close"
+                            ></button>
                         </div>
-                        <div className="modal-body">Bạn có chắc chắn muốn đăng xuất không?</div>
+                        <div className="modal-body">
+                            Bạn có chắc chắn muốn đăng xuất không?
+                        </div>
                         <div className="modal-footer">
-                            <button type="button" className="btn btn-secondary" data-bs-dismiss="modal">
+                            <button
+                                type="button"
+                                className="btn btn-secondary"
+                                data-bs-dismiss="modal"
+                            >
                                 Hủy
                             </button>
-                            <button type="button" className="btn btn-danger" onClick={handleLogoutConfirm}>
+                            <button
+                                type="button"
+                                className="btn btn-danger"
+                                onClick={handleLogoutConfirm}
+                            >
                                 Đăng xuất
                             </button>
                         </div>
